@@ -169,6 +169,8 @@ main:fullscreen { background: var(--bg); }
 #graph:active { cursor: grabbing; }
 
 .link-line { stroke: var(--line); stroke-width: 1.3px; }
+.orbiting .link-line { stroke: #3d5470; opacity: .75; }
+.orbiting .node path { filter: drop-shadow(0 0 5px rgba(120, 170, 255, .25)); }
 .link-line.highlight { stroke: #6ea8ff; stroke-width: 2.2px; }
 .link-label {
   fill: var(--muted);

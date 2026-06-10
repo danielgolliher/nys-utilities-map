@@ -210,9 +210,9 @@ const nodeSel = g.append("g").selectAll("g")
   .data(nodes).join("g")
   .attr("class", "node")
   .call(d3.drag()
-    .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.25).restart(); d.fx = d.x; d.fy = d.y; })
-    .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
-    .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
+    .on("start", (e, d) => { if (mode === "orbit") return; if (!e.active) sim.alphaTarget(0.25).restart(); d.fx = d.x; d.fy = d.y; })
+    .on("drag", (e, d) => { if (mode === "orbit") return; d.fx = e.x; d.fy = e.y; })
+    .on("end", (e, d) => { if (mode === "orbit") return; if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
   .on("click", (e, d) => { e.stopPropagation(); selectNode(d.id); })
   .on("mouseenter", (e, d) => { hoverId = d.id; updateLabels(); })
   .on("mouseleave", () => { hoverId = null; updateLabels(); });
@@ -226,12 +226,11 @@ function refreshSizes() {
     .attr("d", d => symbol.type(TYPE_META[d.type].shape).size(radius(d) * radius(d) * 3.6)());
   nodeSel.select("text").attr("dy", d => radius(d) + 14);
   sim.force("collide").radius(d => radius(d) + 20 * sizeScale);
-  sim.alpha(0.35).restart();
+  if (mode !== "orbit") sim.alpha(0.35).restart();
 }
 refreshSizes();
 
-let tickCount = 0;
-sim.on("tick", () => {
+function render() {
   linkSel.each(function (d) {
     const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
     const dist = Math.hypot(dx, dy) || 1;
@@ -245,9 +244,121 @@ sim.on("tick", () => {
     .attr("x", d => (d.source.x + d.target.x) / 2)
     .attr("y", d => (d.source.y + d.target.y) / 2 - 4);
   nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
+}
+
+let tickCount = 0;
+sim.on("tick", () => {
+  render();
   if (++tickCount % 4 === 0) updateLabels();
 });
 sim.on("end", updateLabels);
+
+// ── orbit mode: nodes orbit their most-connected neighbor ──
+// BFS from the biggest hub assigns each node a parent; children ride concentric
+// rings around the parent with Kepler-ish speeds (closer = faster), directions
+// alternating by depth. Slider scales (spacing/size) are read live every frame.
+let orbitState = null;
+
+function buildOrbitPlan() {
+  const adj = new Map(nodes.map(d => [d.id, []]));
+  links.forEach(l => {
+    adj.get(l.source.id).push(l.target.id);
+    adj.get(l.target.id).push(l.source.id);
+  });
+  const byDeg = [...nodes].sort((a, b) => (degree[b.id] || 0) - (degree[a.id] || 0));
+  const BANDS = [0, 175, 80, 47, 33];
+  const info = new Map();
+  const order = [];
+  let roots = 0;
+  for (const root of byDeg) {
+    if (info.has(root.id)) continue;
+    info.set(root.id, { parentId: null, depth: 0, rootIdx: roots, rootAngle: roots * 2.4 });
+    roots++;
+    const queue = [root.id];
+    while (queue.length) {
+      const pid = queue.shift();
+      order.push(pid);
+      const pInf = info.get(pid);
+      const kids = adj.get(pid)
+        .filter(id => !info.has(id))
+        .sort((a, b) => (degree[b] || 0) - (degree[a] || 0));
+      kids.forEach((kid, i) => {
+        const depth = pInf.depth + 1;
+        const base = BANDS[Math.min(depth, BANDS.length - 1)];
+        const r = base * (1 + 0.17 * (i % 4));
+        info.set(kid, {
+          parentId: pid,
+          depth,
+          r,
+          a0: (2 * Math.PI * i) / kids.length + depth * 0.9,
+          w: 0.22 / Math.pow(r / 100, 0.8),
+          dir: depth % 2 ? 1 : -1
+        });
+        queue.push(kid);
+      });
+    }
+  }
+  return { order, info };
+}
+
+function startOrbit() {
+  sim.stop();
+  const simById = new Map(nodes.map(d => [d.id, d]));
+  const ease = u => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+  orbitState = {
+    ...buildOrbitPlan(),
+    starts: new Map(nodes.map(d => [d.id, [d.x, d.y]])),
+    t: 0, lastTs: null, blend: 0, frame: 0, raf: 0
+  };
+  const step = ts => {
+    const o = orbitState;
+    if (!o || mode !== "orbit") return;
+    if (o.lastTs == null) o.lastTs = ts;
+    const dt = Math.min(0.05, (ts - o.lastTs) / 1000);
+    o.lastTs = ts;
+    o.t += dt;
+    o.blend = Math.min(1, o.blend + dt / 1.4);
+    const k = ease(o.blend);
+    const cx = W() / 2, cy = H() / 2;
+    const scale = Math.max(0.55, distScale) * (0.85 + 0.3 * sizeScale);
+    const pos = new Map();
+    for (const id of o.order) {
+      const inf = o.info.get(id);
+      let tx, ty;
+      if (!inf.parentId) {
+        // hubs breathe around the center; extra components circle it widely
+        const wob = 0.06 * o.t + inf.rootAngle;
+        tx = cx + 22 * Math.cos(wob);
+        ty = cy + 22 * Math.sin(wob);
+        if (inf.rootIdx > 0) {
+          const R = (300 + 70 * inf.rootIdx) * scale;
+          tx += R * Math.cos(inf.rootAngle + 0.03 * o.t);
+          ty += R * Math.sin(inf.rootAngle + 0.03 * o.t);
+        }
+      } else {
+        const p = pos.get(inf.parentId);
+        const ang = inf.a0 + inf.dir * inf.w * o.t;
+        tx = p[0] + inf.r * scale * Math.cos(ang);
+        ty = p[1] + inf.r * scale * Math.sin(ang);
+      }
+      pos.set(id, [tx, ty]);
+      const d = simById.get(id);
+      const s = o.starts.get(id);
+      d.x = s[0] + (tx - s[0]) * k;
+      d.y = s[1] + (ty - s[1]) * k;
+    }
+    render();
+    if (++o.frame % 6 === 0) updateLabels();
+    o.raf = requestAnimationFrame(step);
+  };
+  orbitState.raf = requestAnimationFrame(step);
+}
+
+function stopOrbit() {
+  if (!orbitState) return;
+  cancelAnimationFrame(orbitState.raf);
+  orbitState = null;
+}
 
 // ── label decluttering ──
 // Labels live in the same zoomed group, so graph-space overlap == screen overlap.
@@ -292,6 +403,13 @@ function tierY(i) {
 function applyLayout(alpha = 0.9) {
   sim.force("link").distance(115 * distScale);
   tierLabelSel.classed("visible", mode === "tiers");
+  svg.classed("orbiting", mode === "orbit");
+  if (mode === "orbit") {
+    sim.stop();
+    if (!orbitState) startOrbit();
+    return;
+  }
+  stopOrbit();
   if (mode === "tiers") {
     const cx = W() / 2;
     const byTier = {};
