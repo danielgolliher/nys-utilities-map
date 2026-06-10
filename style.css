@@ -71,6 +71,16 @@ header h1 { margin: 0; font-size: 21px; letter-spacing: .2px; }
 }
 .chip .dot { font-size: 10px; line-height: 1; }
 
+.slider {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.slider input { width: 105px; accent-color: #4f9cf9; }
+
 #layout-toggle {
   display: inline-flex;
   border: 1px solid var(--line);

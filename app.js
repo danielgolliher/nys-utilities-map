@@ -34,7 +34,8 @@ LINKS.forEach(l => {
   degree[l.source] = (degree[l.source] || 0) + 1;
   degree[l.target] = (degree[l.target] || 0) + 1;
 });
-const radius = n => 8 + Math.min(14, (degree[n.id] || 1) * 1.2);
+let sizeScale = 1, distScale = 1;
+const radius = n => (8 + Math.min(14, (degree[n.id] || 1) * 1.2)) * sizeScale;
 
 // ── filters state ──
 const activeTypes = new Set(Object.keys(TYPE_META));
@@ -77,6 +78,11 @@ document.getElementById("reset").onclick = () => {
   activeTypes.clear(); Object.keys(TYPE_META).forEach(k => activeTypes.add(k));
   activeSectors.clear(); SECTORS.forEach(s => activeSectors.add(s));
   document.querySelectorAll(".chip").forEach(c => { c.classList.add("active"); c.classList.remove("dimmed"); });
+  sizeScale = 1; distScale = 1;
+  document.getElementById("size-slider").value = 1;
+  document.getElementById("dist-slider").value = 1;
+  refreshSizes();
+  applyLayout();
   selectNode(null);
   svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
   applyVisibility();
@@ -90,6 +96,23 @@ document.querySelectorAll("#layout-toggle button").forEach(btn => {
     mode = btn.dataset.mode;
     applyLayout();
   };
+});
+
+// size & spacing sliders
+function refreshSizes() {
+  nodeSel.select("path")
+    .attr("d", d => symbol.type(TYPE_META[d.type].shape).size(radius(d) * radius(d) * 3.6)());
+  nodeSel.select("text").attr("dy", d => radius(d) + 14);
+  sim.force("collide").radius(d => radius(d) + 17 * sizeScale);
+  sim.alpha(0.35).restart();
+}
+document.getElementById("size-slider").addEventListener("input", e => {
+  sizeScale = +e.target.value;
+  refreshSizes();
+});
+document.getElementById("dist-slider").addEventListener("input", e => {
+  distScale = +e.target.value;
+  applyLayout(0.5);
 });
 
 // ── SVG / simulation ──
@@ -177,22 +200,23 @@ function tierY(i) {
   const pad = 80;
   return pad + i * ((H() - 2 * pad) / (TIERS.length - 1));
 }
-function applyLayout() {
+function applyLayout(alpha = 0.9) {
+  sim.force("link").distance(115 * distScale);
   if (mode === "tiers") {
     sim.force("center", null)
       .force("x", d3.forceX(W() / 2).strength(0.05))
       .force("y", d3.forceY(d => tierY(TIER_OF[d.type])).strength(0.6))
-      .force("charge", d3.forceManyBody().strength(-240));
+      .force("charge", d3.forceManyBody().strength(-240 * distScale));
     sim.force("link").strength(0.03);
     tierLabelSel.attr("y", (d, i) => tierY(i) - 38).classed("visible", true);
   } else {
     sim.force("x", null).force("y", null)
       .force("center", d3.forceCenter(W() / 2, H() / 2))
-      .force("charge", d3.forceManyBody().strength(-420));
+      .force("charge", d3.forceManyBody().strength(-420 * distScale));
     sim.force("link").strength(0.5);
     tierLabelSel.classed("visible", false);
   }
-  sim.alpha(0.9).restart();
+  sim.alpha(alpha).restart();
 }
 
 window.addEventListener("resize", () => { applyLayout(); });
