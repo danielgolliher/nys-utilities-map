@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYS Utility Governance Map</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>New York State Utility Governance</h1>
+  <p class="subtitle">Entities, laws, and processes that shape electric, gas, steam, water &amp; telecom utilities — click a node for details, drag to rearrange, scroll to zoom.</p>
+</header>
+
+<div id="controls">
+  <input id="search" type="search" placeholder="Search nodes… (e.g. PSC, CLCPA, rate)" autocomplete="off">
+  <div id="type-filters" class="filter-group" aria-label="Filter by type"></div>
+  <div id="sector-filters" class="filter-group" aria-label="Filter by sector"></div>
+  <button id="reset">Reset view</button>
+</div>
+
+<main>
+  <svg id="graph"></svg>
+  <aside id="panel" class="hidden">
+    <button id="panel-close" aria-label="Close">×</button>
+    <span id="panel-type" class="badge"></span>
+    <h2 id="panel-title"></h2>
+    <div id="panel-sectors"></div>
+    <div id="panel-body"></div>
+    <h3>Connections</h3>
+    <ul id="panel-links"></ul>
+    <a id="panel-source" target="_blank" rel="noopener">Official source ↗</a>
+  </aside>
+</main>
+
+<footer>
+  <p>An unofficial civic reference. Statutory citations: Public Service Law, Public Authorities Law,
+     Executive Law §94-c, Energy Law Art. 6. Current through the 2024 RAPID Act / 2025 session.</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
