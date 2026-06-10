@@ -1,4 +1,4 @@
-// NYS Utility Governance Map — force-directed graph with tiered-layout mode
+// NYS Utility Governance Map — force graph with tiers/ring layouts, label decluttering
 
 const TYPE_META = {
   fedlaw:      { label: "Federal law",      hex: "#0bc5ea", shape: d3.symbolSquare },
@@ -13,6 +13,7 @@ const TYPE_META = {
   utility:     { label: "Utility",          hex: "#f56565", shape: d3.symbolCircle },
   process:     { label: "Process",          hex: "#f687b3", shape: d3.symbolCircle }
 };
+const TYPE_ORDER = Object.keys(TYPE_META);
 const SECTORS = ["electric", "gas", "steam", "water", "telecom"];
 
 // Tier rows for the layered layout (top → bottom = federal → companies)
@@ -34,61 +35,88 @@ LINKS.forEach(l => {
   degree[l.source] = (degree[l.source] || 0) + 1;
   degree[l.target] = (degree[l.target] || 0) + 1;
 });
-let sizeScale = 1, distScale = 1;
-const radius = n => (8 + Math.min(14, (degree[n.id] || 1) * 1.2)) * sizeScale;
 
-// ── filters state ──
-const activeTypes = new Set(Object.keys(TYPE_META));
-const activeSectors = new Set(SECTORS);
+// ── display state ──
+let sizeScale = 1, distScale = 1;
+let labelMode = "auto";   // auto | all | none
+let sizeBy = "degree";    // degree | uniform
+let sortBy = "degree";    // degree | alpha
 let searchTerm = "";
 let selectedId = null;
-let mode = "force";
+let hoverId = null;
+let mode = "force";       // force | tiers | ring
 
-// ── build filter chips ──
-const typeBox = document.getElementById("type-filters");
-Object.entries(TYPE_META).forEach(([key, meta]) => {
-  const chip = document.createElement("span");
-  chip.className = "chip active";
-  const mark = meta.shape === d3.symbolSquare ? "■" : meta.shape === d3.symbolDiamond ? "◆" : "●";
-  chip.innerHTML = `<span class="dot" style="color:${meta.hex}">${mark}</span>${meta.label}`;
-  chip.onclick = () => { toggle(activeTypes, key, chip); };
-  typeBox.appendChild(chip);
-});
-const sectorBox = document.getElementById("sector-filters");
-SECTORS.forEach(s => {
-  const chip = document.createElement("span");
-  chip.className = "chip active";
-  chip.textContent = s;
-  chip.onclick = () => { toggle(activeSectors, s, chip); };
-  sectorBox.appendChild(chip);
-});
-function toggle(set, key, chip) {
-  if (set.has(key)) { set.delete(key); chip.classList.remove("active"); chip.classList.add("dimmed"); }
-  else { set.add(key); chip.classList.add("active"); chip.classList.remove("dimmed"); }
-  applyVisibility();
+const radius = n => (sizeBy === "uniform" ? 11 : 8 + Math.min(14, (degree[n.id] || 1) * 1.2)) * sizeScale;
+const sortCmp = (a, b) => sortBy === "alpha"
+  ? a.label.localeCompare(b.label)
+  : (degree[b.id] || 0) - (degree[a.id] || 0) || a.label.localeCompare(b.label);
+
+// ── filters ──
+const activeTypes = new Set(TYPE_ORDER);
+const activeSectors = new Set(SECTORS);
+
+function buildFilterGroup(container, keys, set, renderChip) {
+  const mkBtn = (txt, fn, title) => {
+    const b = document.createElement("button");
+    b.className = "mini-btn";
+    b.textContent = txt;
+    if (title) b.title = title;
+    b.onclick = fn;
+    container.appendChild(b);
+    return b;
+  };
+  const chips = new Map();
+  const sync = () => chips.forEach((chip, key) => {
+    chip.classList.toggle("active", set.has(key));
+    chip.classList.toggle("dimmed", !set.has(key));
+  });
+  mkBtn("All", () => { keys.forEach(k => set.add(k)); sync(); applyVisibility(); });
+  mkBtn("None", () => { set.clear(); sync(); applyVisibility(); },
+    container.id === "type-filters" ? "Turn off all nodes" : "Turn off all sectors");
+  keys.forEach(key => {
+    const chip = document.createElement("span");
+    chip.className = "chip active";
+    renderChip(chip, key);
+    chip.onclick = () => {
+      set.has(key) ? set.delete(key) : set.add(key);
+      sync(); applyVisibility();
+    };
+    container.appendChild(chip);
+    chips.set(key, chip);
+  });
+  return sync;
 }
+
+const syncTypeChips = buildFilterGroup(
+  document.getElementById("type-filters"), TYPE_ORDER, activeTypes,
+  (chip, key) => {
+    const meta = TYPE_META[key];
+    const mark = meta.shape === d3.symbolSquare ? "■" : meta.shape === d3.symbolDiamond ? "◆" : "●";
+    chip.innerHTML = `<span class="dot" style="color:${meta.hex}">${mark}</span>${meta.label}`;
+  });
+const syncSectorChips = buildFilterGroup(
+  document.getElementById("sector-filters"), SECTORS, activeSectors,
+  (chip, key) => { chip.textContent = key; });
 
 document.getElementById("search").addEventListener("input", e => {
   searchTerm = e.target.value.trim().toLowerCase();
   applyVisibility();
 });
-document.getElementById("reset").onclick = () => {
-  document.getElementById("search").value = "";
-  searchTerm = "";
-  activeTypes.clear(); Object.keys(TYPE_META).forEach(k => activeTypes.add(k));
-  activeSectors.clear(); SECTORS.forEach(s => activeSectors.add(s));
-  document.querySelectorAll(".chip").forEach(c => { c.classList.add("active"); c.classList.remove("dimmed"); });
-  sizeScale = 1; distScale = 1;
-  document.getElementById("size-slider").value = 1;
-  document.getElementById("dist-slider").value = 1;
-  refreshSizes();
-  applyLayout();
-  selectNode(null);
-  svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
-  applyVisibility();
-};
 
-// layout segmented control
+// ── option controls ──
+document.getElementById("label-mode").addEventListener("change", e => {
+  labelMode = e.target.value;
+  updateLabels();
+});
+document.getElementById("size-by").addEventListener("change", e => {
+  sizeBy = e.target.value;
+  refreshSizes();
+  applyLayout(0.4);
+});
+document.getElementById("sort-by").addEventListener("change", e => {
+  sortBy = e.target.value;
+  applyLayout(0.6);
+});
 document.querySelectorAll("#layout-toggle button").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll("#layout-toggle button").forEach(b => b.classList.remove("on"));
@@ -97,29 +125,36 @@ document.querySelectorAll("#layout-toggle button").forEach(btn => {
     applyLayout();
   };
 });
-
-// size & spacing sliders
-function refreshSizes() {
-  nodeSel.select("path")
-    .attr("d", d => symbol.type(TYPE_META[d.type].shape).size(radius(d) * radius(d) * 3.6)());
-  nodeSel.select("text").attr("dy", d => radius(d) + 14);
-  sim.force("collide").radius(d => radius(d) + 17 * sizeScale);
-  sim.alpha(0.35).restart();
-}
 document.getElementById("size-slider").addEventListener("input", e => {
   sizeScale = +e.target.value;
   refreshSizes();
+  if (mode !== "force") applyLayout(0.4);
 });
 document.getElementById("dist-slider").addEventListener("input", e => {
   distScale = +e.target.value;
   applyLayout(0.5);
 });
+document.getElementById("reset").onclick = () => {
+  document.getElementById("search").value = ""; searchTerm = "";
+  TYPE_ORDER.forEach(k => activeTypes.add(k)); syncTypeChips();
+  SECTORS.forEach(s => activeSectors.add(s)); syncSectorChips();
+  sizeScale = 1; distScale = 1;
+  document.getElementById("size-slider").value = 1;
+  document.getElementById("dist-slider").value = 1;
+  labelMode = "auto"; document.getElementById("label-mode").value = "auto";
+  sizeBy = "degree"; document.getElementById("size-by").value = "degree";
+  sortBy = "degree"; document.getElementById("sort-by").value = "degree";
+  refreshSizes();
+  applyLayout();
+  selectNode(null);
+  svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+  applyVisibility();
+};
 
 // ── SVG / simulation ──
 const svg = d3.select("#graph");
 const W = () => svg.node().clientWidth, H = () => svg.node().clientHeight;
 
-// arrowhead
 svg.append("defs").append("marker")
   .attr("id", "arrow").attr("viewBox", "0 -4 8 8")
   .attr("refX", 7).attr("refY", 0)
@@ -128,7 +163,7 @@ svg.append("defs").append("marker")
   .append("path").attr("d", "M0,-3.5L8,0L0,3.5").attr("fill", "#55687c");
 
 const g = svg.append("g");
-const zoom = d3.zoom().scaleExtent([0.25, 4]).on("zoom", e => g.attr("transform", e.transform));
+const zoom = d3.zoom().scaleExtent([0.15, 4]).on("zoom", e => g.attr("transform", e.transform));
 svg.call(zoom).on("dblclick.zoom", null);
 svg.on("click", () => selectNode(null));
 
@@ -139,9 +174,8 @@ const sim = d3.forceSimulation(nodes)
   .force("link", d3.forceLink(links).id(d => d.id).distance(115).strength(0.5))
   .force("charge", d3.forceManyBody().strength(-420))
   .force("center", d3.forceCenter(W() / 2, H() / 2))
-  .force("collide", d3.forceCollide().radius(d => radius(d) + 17));
+  .force("collide", d3.forceCollide().radius(d => radius(d) + 20));
 
-// tier band labels (visible only in tiered mode)
 const tierLabelSel = g.append("g").selectAll("text")
   .data(TIERS).join("text")
   .attr("class", "tier-label")
@@ -167,19 +201,25 @@ const nodeSel = g.append("g").selectAll("g")
     .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.25).restart(); d.fx = d.x; d.fy = d.y; })
     .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
     .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
-  .on("click", (e, d) => { e.stopPropagation(); selectNode(d.id); });
+  .on("click", (e, d) => { e.stopPropagation(); selectNode(d.id); })
+  .on("mouseenter", (e, d) => { hoverId = d.id; updateLabels(); })
+  .on("mouseleave", () => { hoverId = null; updateLabels(); });
 
-nodeSel.append("path")
-  .attr("d", d => symbol.type(TYPE_META[d.type].shape).size(radius(d) * radius(d) * 3.6)())
-  .attr("fill", d => TYPE_META[d.type].hex);
-
-nodeSel.append("text")
-  .attr("dy", d => radius(d) + 14)
-  .attr("text-anchor", "middle")
+nodeSel.append("path").attr("fill", d => TYPE_META[d.type].hex);
+nodeSel.append("text").attr("text-anchor", "middle")
   .text(d => d.label.length > 40 ? d.label.slice(0, 38) + "…" : d.label);
 
+function refreshSizes() {
+  nodeSel.select("path")
+    .attr("d", d => symbol.type(TYPE_META[d.type].shape).size(radius(d) * radius(d) * 3.6)());
+  nodeSel.select("text").attr("dy", d => radius(d) + 14);
+  sim.force("collide").radius(d => radius(d) + 20 * sizeScale);
+  sim.alpha(0.35).restart();
+}
+refreshSizes();
+
+let tickCount = 0;
 sim.on("tick", () => {
-  // shorten each link so the arrowhead lands at the target's edge
   linkSel.each(function (d) {
     const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
     const dist = Math.hypot(dx, dy) || 1;
@@ -193,33 +233,94 @@ sim.on("tick", () => {
     .attr("x", d => (d.source.x + d.target.x) / 2)
     .attr("y", d => (d.source.y + d.target.y) / 2 - 4);
   nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
+  if (++tickCount % 4 === 0) updateLabels();
 });
+sim.on("end", updateLabels);
 
-// ── layout switching ──
+// ── label decluttering ──
+// Labels live in the same zoomed group, so graph-space overlap == screen overlap.
+function labelW(d) {
+  return Math.min(d.label.length, 40) * 6.5;
+}
+function updateLabels() {
+  const text = nodeSel.select("text");
+  if (labelMode === "none") {
+    text.style("display", d => d.id === hoverId || d.id === selectedId ? null : "none");
+    return;
+  }
+  if (labelMode === "all") { text.style("display", null); return; }
+  // auto: greedy placement by priority (selected > hovered > most-connected)
+  const placed = [];
+  const show = new Set();
+  const vis = nodes.filter(nodeVisible)
+    .sort((a, b) =>
+      (b.id === selectedId) - (a.id === selectedId) ||
+      (b.id === hoverId) - (a.id === hoverId) ||
+      (degree[b.id] || 0) - (degree[a.id] || 0));
+  vis.forEach(d => {
+    const w = labelW(d), h = 14;
+    const x = d.x - w / 2, y = d.y + radius(d) + 3;
+    const clash = placed.some(b => x < b.x + b.w && b.x < x + w && y < b.y + b.h && b.y < y + h);
+    if (!clash || d.id === selectedId || d.id === hoverId) {
+      placed.push({ x, y, w, h });
+      show.add(d.id);
+    }
+  });
+  text.style("display", d => show.has(d.id) ? null : "none");
+}
+
+// ── layouts ──
 function tierY(i) {
   const pad = 80;
-  return pad + i * ((H() - 2 * pad) / (TIERS.length - 1));
+  const spread = Math.max(1, distScale, sizeScale * 0.9);
+  const cy = H() / 2;
+  const base = pad + i * ((H() - 2 * pad) / (TIERS.length - 1));
+  return cy + (base - cy) * spread;
 }
 function applyLayout(alpha = 0.9) {
   sim.force("link").distance(115 * distScale);
+  tierLabelSel.classed("visible", mode === "tiers");
   if (mode === "tiers") {
+    const cx = W() / 2;
+    const byTier = {};
+    nodes.forEach(d => { (byTier[TIER_OF[d.type]] ||= []).push(d); });
+    Object.values(byTier).forEach(arr => {
+      arr.sort(sortCmp);
+      arr.forEach((d, i) => {
+        const raw = W() * (i + 1) / (arr.length + 1);
+        d.tx = cx + (raw - cx) * Math.max(1, distScale * 0.9);
+      });
+    });
     sim.force("center", null)
-      .force("x", d3.forceX(W() / 2).strength(0.05))
+      .force("x", d3.forceX(d => d.tx).strength(0.2))
       .force("y", d3.forceY(d => tierY(TIER_OF[d.type])).strength(0.6))
-      .force("charge", d3.forceManyBody().strength(-240 * distScale));
-    sim.force("link").strength(0.03);
-    tierLabelSel.attr("y", (d, i) => tierY(i) - 38).classed("visible", true);
+      .force("charge", d3.forceManyBody().strength(-180 * distScale));
+    sim.force("link").strength(0.02);
+    tierLabelSel.attr("y", (d, i) => tierY(i) - 40);
+  } else if (mode === "ring") {
+    const cx = W() / 2, cy = H() / 2;
+    const R = (Math.min(W(), H()) / 2 - 110) * Math.max(1, distScale * 0.85) * Math.max(1, sizeScale * 0.8);
+    const order = [...nodes].sort((a, b) =>
+      TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type) || sortCmp(a, b));
+    order.forEach((d, i) => {
+      const a = -Math.PI / 2 + 2 * Math.PI * i / order.length;
+      d.rx = cx + R * Math.cos(a);
+      d.ry = cy + R * Math.sin(a);
+    });
+    sim.force("center", null)
+      .force("x", d3.forceX(d => d.rx).strength(0.5))
+      .force("y", d3.forceY(d => d.ry).strength(0.5))
+      .force("charge", d3.forceManyBody().strength(-40));
+    sim.force("link").strength(0.005);
   } else {
     sim.force("x", null).force("y", null)
       .force("center", d3.forceCenter(W() / 2, H() / 2))
       .force("charge", d3.forceManyBody().strength(-420 * distScale));
     sim.force("link").strength(0.5);
-    tierLabelSel.classed("visible", false);
   }
   sim.alpha(alpha).restart();
 }
-
-window.addEventListener("resize", () => { applyLayout(); });
+window.addEventListener("resize", () => applyLayout(0.4));
 
 // ── visibility (filters + search) ──
 function nodeVisible(d) {
@@ -233,6 +334,7 @@ function applyVisibility() {
   nodeSel.classed("faded", d => !vis.has(d.id));
   linkSel.classed("faded", d => !vis.has(d.source.id) || !vis.has(d.target.id));
   if (selectedId && !vis.has(selectedId)) selectNode(null);
+  updateLabels();
 }
 
 // ── selection / detail panel ──
@@ -264,6 +366,7 @@ function selectNode(id) {
   linkSel.classed("highlight", l => l.source.id === id || l.target.id === id)
          .classed("faded", l => !(l.source.id === id || l.target.id === id));
   linkLabelSel.classed("visible", l => l.source.id === id || l.target.id === id);
+  updateLabels();
 
   const meta = TYPE_META[d.type];
   const badge = document.getElementById("panel-type");
@@ -286,8 +389,7 @@ function selectNode(id) {
     ul.appendChild(li);
   });
 
-  const src = document.getElementById("panel-source");
-  src.href = d.link;
+  document.getElementById("panel-source").href = d.link;
   panel.classList.remove("hidden");
 }
 document.getElementById("panel-close").onclick = () => selectNode(null);
