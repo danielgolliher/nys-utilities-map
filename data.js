@@ -503,9 +503,10 @@ const NODES = [
     sectors: ["gas"],
     blurb: `The PSC's 2022 gas-planning framework (Case 20-G-0131) requires each gas utility to file long-term
       plans reconciling reliability with CLCPA emission limits — testing non-pipe alternatives before new
-      mains, phasing down the "100-foot rule" (free service-line extensions; repeal proposed in the NY HEAT
-      Act, which has passed the Senate but not the Assembly as of 2025). Moratoria (Westchester 2019,
-      Brooklyn) showed what happens when supply and policy collide.`,
+      mains. The "100-foot rule" (free service-line extensions, ~$600M/yr socialized to ratepayers) was
+      repealed for residential buildings in December 2025, effective twelve months later; the broader
+      NY HEAT framework (neighborhood decommissioning, burden caps) remains unenacted. Moratoria
+      (Westchester 2019, Brooklyn) showed what happens when supply and policy collide.`,
     link: "https://dps.ny.gov/gas-planning"
   },
   {
