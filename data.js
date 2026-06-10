@@ -342,8 +342,9 @@ const NODES = [
     blurb: `The Climate Leadership and Community Protection Act — New York's binding climate framework:
       40% GHG reduction by 2030 and 85% by 2050 (from 1990); 70% renewable electricity by 2030; a
       zero-emission grid by 2040; 9 GW offshore wind by 2035, 6 GW distributed solar by 2025, 3 GW
-      storage by 2030 (since raised to 6 GW by PSC order); and a requirement that 35–40% of clean-energy
-      benefits flow to disadvantaged communities. §7(2) requires all state agencies — including the PSC —
+      storage by 2030 (since raised to 6 GW by PSC order); and a disadvantaged-communities benefits
+      requirement — originally a 40% goal with a 35% floor, raised by the May 2026 budget to 45%/40%
+      (ECL §75-0117). §7(2) requires all state agencies — including the PSC —
       to weigh consistency with the Act's limits in every permit and approval. It drives the Clean Energy
       Standard, gas-planning proceedings, and most current utility policy.`,
     link: "https://climate.ny.gov/resources/climate-act/"
@@ -376,7 +377,8 @@ const NODES = [
     type: "law",
     sectors: ["electric"],
     blurb: `Passed in the FY2024 budget after a multi-year campaign: directs NYPA to plan and build renewable
-      generation (alone or with partners) wherever the private market is falling short of CLCPA targets,
+      generation (alone or with partners) — "authorized and directed," PAL §1005(27-a), with an annual
+      planning process to identify projects needed to keep the state on track for CLCPA targets —
       requires NYPA to retire its six downstate fossil peaker plants by 2030 where reliability allows,
       mandates prevailing-wage/labor standards, and creates the REACH program to deliver bill credits to
       disadvantaged-community customers. NYPA published its first renewables strategic plan in 2024–25
