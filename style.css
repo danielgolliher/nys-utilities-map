@@ -147,6 +147,24 @@ header h1 { margin: 0; font-size: 21px; letter-spacing: .2px; }
 #reset:hover { color: var(--ink); }
 
 main { flex: 1; position: relative; min-height: 0; }
+main:fullscreen { background: var(--bg); }
+
+#fs-btn {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+#fs-btn:hover { color: var(--ink); border-color: var(--muted); }
 #graph { width: 100%; height: 100%; display: block; cursor: grab; }
 #graph:active { cursor: grabbing; }
 

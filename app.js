@@ -151,6 +151,18 @@ document.getElementById("reset").onclick = () => {
   applyVisibility();
 };
 
+// fullscreen toggle on the graph area
+const fsBtn = document.getElementById("fs-btn");
+fsBtn.onclick = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.querySelector("main").requestFullscreen();
+};
+document.addEventListener("fullscreenchange", () => {
+  fsBtn.textContent = document.fullscreenElement ? "✕" : "⛶";
+  fsBtn.title = document.fullscreenElement ? "Exit full screen" : "Toggle full screen (Esc to exit)";
+  applyLayout(0.4);
+});
+
 // ── SVG / simulation ──
 const svg = d3.select("#graph");
 const W = () => svg.node().clientWidth, H = () => svg.node().clientHeight;
