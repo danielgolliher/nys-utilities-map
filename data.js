@@ -437,13 +437,14 @@ const NODES = [
     type: "process",
     sectors: ["electric", "gas", "steam", "water"],
     blurb: `How delivery rates get set. A utility files proposed tariffs with supporting testimony; the PSC
-      suspends them for up to 11 months (PSL §66(12)) — which is why nearly every case resolves inside
-      that window. DPS staff, the AG, UIU, and intervenors (municipalities, large customers, environmental
+      suspends them (PSL §66(12)(f) permits suspension up to 14 months) and by longstanding practice decides
+      major cases within ~11 months of filing — if it fails to act, the filed rates take effect as a matter
+      of law. DPS staff, the AG, UIU, and intervenors (municipalities, large customers, environmental
       and consumer groups) take discovery and file testimony before an Administrative Law Judge; most cases
       settle into a multi-year "joint proposal" the Commission then approves, often with an earnings-sharing
       mechanism, performance metrics, and capital-spending conditions. Revenue requirement = operating
-      costs + depreciation + taxes + (rate base × allowed return on equity, lately ~9–9.5%).`,
-    link: "https://dps.ny.gov/rate-case-process"
+      costs + depreciation + taxes + (rate base × allowed return on equity, lately ~9.2–9.5%).`,
+    link: "https://dps.ny.gov/major-rate-case-process-overview"
   },
   {
     id: "cpcn",
@@ -488,8 +489,9 @@ const NODES = [
     blurb: `The PSC's 2016 Clean Energy Standard order (Case 15-E-0302), expanded in 2020 to match the CLCPA:
       load-serving entities must buy RECs reflecting rising renewable percentages. NYSERDA runs annual
       Tier 1 REC solicitations, offshore-wind OREC contracts, and Tier 4 (renewable delivery into NYC —
-      CHPE). The CES also contains the ZEC (zero-emission credit) program subsidizing upstate nuclear
-      plants through 2029. Costs flow to ratepayers via utility supply charges.`,
+      CHPE). The CES also contains the ZEC (zero-emission credit) program subsidizing the upstate nuclear
+      plants — originally a 12-year program through March 2029, extended by the PSC in January 2026
+      ("ZEC 2.0") to support the fleet into the 2040s. Costs flow to ratepayers via utility supply charges.`,
     link: "https://www.nyserda.ny.gov/All-Programs/Clean-Energy-Standard"
   },
   {
