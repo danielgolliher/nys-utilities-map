@@ -553,6 +553,228 @@ const NODES = [
       targets with reliability and affordability pressures (data-center load growth, offshore-wind cost
       resets).`,
     link: "https://energyplan.ny.gov/"
+  },
+
+  // ───────────────────────────── FEDERAL LAW ─────────────────────────────
+  {
+    id: "fpa",
+    label: "Federal Power Act (1935)",
+    type: "fedlaw",
+    sectors: ["electric"],
+    blurb: `The statute that draws the line between FERC and the PSC. FERC gets exclusive jurisdiction over
+      wholesale electricity sales and interstate transmission (Parts II–III, with the §205/§206 "just and
+      reasonable" standard); the states keep retail sales, distribution, and generation siting. Part I
+      governs hydro licensing (NYPA's Niagara license). §215 (added 2005) makes NERC reliability standards
+      mandatory. Nearly every preemption fight over NY energy policy — ZECs, capacity markets, demand
+      response — is fought on FPA ground.`,
+    link: "https://www.ferc.gov/industries-data/electric"
+  },
+  {
+    id: "nga",
+    label: "Natural Gas Act (1938)",
+    type: "fedlaw",
+    sectors: ["gas"],
+    blurb: `Gives FERC jurisdiction over interstate natural-gas pipelines and wholesale gas sales. The key
+      provision is §7: a FERC certificate of public convenience and necessity authorizes a pipeline AND
+      confers federal eminent-domain power — which is why pipeline fights in NY run through the few levers
+      the state keeps (chiefly Clean Water Act §401 certification, via DEC). Local distribution remains
+      state-regulated under the Public Service Law.`,
+    link: "https://www.ferc.gov/industries-data/natural-gas"
+  },
+  {
+    id: "purpa",
+    label: "PURPA (1978)",
+    type: "fedlaw",
+    sectors: ["electric"],
+    blurb: `The Public Utility Regulatory Policies Act forced utilities to buy power from "qualifying
+      facilities" (cogeneration, small renewables) at avoided cost — the first crack in the vertically
+      integrated monopoly and the seedbed of independent power in NY (the 1980s "six-cent law" era).
+      States implement it: the PSC sets QF terms. Largely superseded by competitive markets, but still
+      the legal floor for small-generator purchase rights.`,
+    link: "https://www.ferc.gov/qualifying-facilities-purpa"
+  },
+  {
+    id: "epact2005",
+    label: "Energy Policy Act of 2005",
+    type: "fedlaw",
+    sectors: ["electric"],
+    blurb: `Post-2003-blackout legislation (the blackout started on Ohio lines but blacked out most of NY):
+      added FPA §215 making NERC reliability standards mandatory and enforceable — NPCC is the regional
+      entity, and the NY State Reliability Council layers stricter NY-only rules on top. Also repealed the
+      Public Utility Holding Company Act (enabling today's multi-state and foreign utility ownership —
+      National Grid, Iberdrola/Avangrid, Fortis) and gave FERC limited "backstop" transmission-siting
+      power.`,
+    link: "https://www.ferc.gov/industries-data/electric/industry-activities/reliability"
+  },
+  {
+    id: "cwa401",
+    label: "Clean Water Act §401",
+    type: "fedlaw",
+    sectors: ["gas", "electric"],
+    blurb: `Requires a state water-quality certification before any federal license or permit for a project
+      that may discharge into navigable waters. This is New York's main veto point over FERC-certificated
+      interstate pipelines: DEC's denials stopped the Constitution Pipeline and Northern Access. A 2020
+      EPA rule tried to narrow the state role; the rules have ping-ponged since, but §401 remains the
+      state's strongest card in gas-infrastructure fights.`,
+    link: "https://www.epa.gov/cwa-401"
+  },
+  {
+    id: "telecom96",
+    label: "Telecommunications Act of 1996",
+    type: "fedlaw",
+    sectors: ["telecom"],
+    blurb: `The federal framework for telecom competition: FCC primacy, local-competition rules, §253
+      preemption of state barriers to entry, and §332 limits on state regulation of wireless. It's why PSC
+      jurisdiction over telecom is thin compared to energy — the state's remaining levers are service
+      quality, pole attachments and rights-of-way, merger conditions (the Charter/Time Warner build-out
+      conditions), and Lifeline-type programs.`,
+    link: "https://www.fcc.gov/general/telecommunications-act-1996"
+  },
+  {
+    id: "ferc-orders",
+    label: "FERC restructuring orders (888 / 2000 / 841 / 2222 / 1920)",
+    type: "fedlaw",
+    sectors: ["electric"],
+    blurb: `The rulemakings that built the market NY operates in. Order 888 (1996): open, non-discriminatory
+      transmission access — the foundation for NY's late-90s restructuring. Order 2000 (1999): regional
+      transmission organizations — NYISO. Order 841 (2018): storage participation in wholesale markets.
+      Order 2222 (2020): aggregated distributed resources (rooftop solar, batteries, EVs) may bid into
+      NYISO markets — interacting with the PSC's VDER regime. Order 1920 (2024): long-term regional
+      transmission planning and cost allocation.`,
+    link: "https://www.ferc.gov/electric-power-markets"
+  },
+
+  // ───────────────────────────── CASE LAW ─────────────────────────────
+  {
+    id: "hope",
+    label: "FPC v. Hope Natural Gas (1944) + Bluefield (1923)",
+    type: "case",
+    sectors: ["electric", "gas", "water"],
+    blurb: `The constitutional foundation of every rate case. <em>Bluefield</em> (262 U.S. 679): investors
+      in a regulated utility are entitled to a return commensurate with enterprises of comparable risk.
+      <em>Hope</em> (320 U.S. 591): courts judge the "end result," not the ratemaking method — rates are
+      lawful if the total effect lets the utility operate, maintain credit, and attract capital. Together
+      they define the "just and reasonable" standard the PSC applies under PSL §65 and FERC under the
+      FPA/NGA, and they're why allowed return on equity is the central fight in every NY rate case.`,
+    link: "https://supreme.justia.com/cases/federal/us/320/591/"
+  },
+  {
+    id: "centralhudson-case",
+    label: "Central Hudson v. PSC (1980)",
+    type: "case",
+    sectors: ["electric", "gas"],
+    blurb: `447 U.S. 557 — one of the most-cited First Amendment cases in American law, and it arose from
+      the NY PSC. During the 1970s energy crisis the Commission banned utility promotional advertising;
+      the Supreme Court struck the ban and announced the four-part <em>Central Hudson</em> test for
+      commercial speech, still the governing framework today. Decided the same day as its companion,
+      <em>Consolidated Edison v. PSC</em> (447 U.S. 530), which voided the PSC's ban on political bill
+      inserts. A reminder that PSC orders can make constitutional law.`,
+    link: "https://supreme.justia.com/cases/federal/us/447/557/"
+  },
+  {
+    id: "memphis-craft",
+    label: "Memphis Light v. Craft (1978)",
+    type: "case",
+    sectors: ["electric", "gas", "water"],
+    blurb: `436 U.S. 1 — utility service is a protected property interest: a municipal utility must give
+      customers notice and an opportunity to dispute a bill before shutoff. The due-process backdrop
+      against which the Legislature wrote HEFPA's far more detailed termination protections three years
+      later, and the constitutional floor that still applies directly to public systems like munis
+      and LIPA.`,
+    link: "https://supreme.justia.com/cases/federal/us/436/1/"
+  },
+  {
+    id: "ny-v-ferc",
+    label: "New York v. FERC (2002)",
+    type: "case",
+    sectors: ["electric"],
+    blurb: `535 U.S. 1 — New York itself challenged FERC's Order 888. The Court upheld FERC jurisdiction
+      over unbundled retail transmission (electrons don't respect the retail/wholesale line once on the
+      interstate grid) while declining to force FERC to assert jurisdiction over bundled retail
+      transmission. The case fixed the modern boundary the PSC and NYISO live on.`,
+    link: "https://supreme.justia.com/cases/federal/us/535/1/"
+  },
+  {
+    id: "hughes-talen",
+    label: "Hughes v. Talen Energy (2016)",
+    type: "case",
+    sectors: ["electric"],
+    blurb: `578 U.S. 150 — Maryland ordered utilities to sign a contract guaranteeing a generator a price
+      tied to the PJM wholesale clearing price; the Court held that "tethering" a state subsidy to
+      wholesale-market outcomes invades FERC's exclusive FPA field. Crucially, the opinion blessed state
+      measures "untethered" from wholesale prices — the roadmap NY followed in designing ZECs and REC
+      procurement so they'd survive (see <em>Zibelman</em>).`,
+    link: "https://supreme.justia.com/cases/federal/us/578/150/"
+  },
+  {
+    id: "epsa",
+    label: "FERC v. EPSA (2016)",
+    type: "case",
+    sectors: ["electric"],
+    blurb: `577 U.S. 260 — upheld FERC Order 745 (paying demand response the full wholesale price). FERC
+      may regulate practices that "directly affect" wholesale rates even when the participants are retail
+      customers. The doctrinal basis for Orders 841 and 2222 — i.e., for distributed resources in NY
+      homes bidding into NYISO markets.`,
+    link: "https://supreme.justia.com/cases/federal/us/577/260/"
+  },
+  {
+    id: "zibelman",
+    label: "Coalition for Competitive Electricity v. Zibelman (2d Cir. 2018)",
+    type: "case",
+    sectors: ["electric"],
+    blurb: `906 F.3d 41 — merchant generators challenged NY's zero-emission credits for upstate nuclear
+      plants as FPA-preempted. The Second Circuit upheld the program: ZECs are payments for an
+      environmental attribute, not tethered to wholesale prices, so they fall on the state side of the
+      <em>Hughes</em> line. (Named for then-PSC Chair Audrey Zibelman.) The legal green light for the
+      whole Clean Energy Standard architecture — RECs, ORECs, Tier 4.`,
+    link: "https://law.justia.com/cases/federal/appellate-courts/ca2/17-2654/17-2654-2018-09-27.html"
+  },
+  {
+    id: "constitution-pipeline",
+    label: "Constitution Pipeline v. NYSDEC (2d Cir. 2017)",
+    type: "case",
+    sectors: ["gas"],
+    blurb: `868 F.3d 87 — DEC denied Clean Water Act §401 certification for the FERC-approved Constitution
+      Pipeline (Pennsylvania gas into NY) over stream-crossing impacts; the Second Circuit upheld the
+      denial as within the state's §401 authority. The project died, confirming §401 as New York's
+      effective veto over interstate gas expansion — central context for downstate gas moratoria and
+      gas-planning policy.`,
+    link: "https://law.justia.com/cases/federal/appellate-courts/ca2/16-1568/16-1568-2017-08-18.html"
+  },
+  {
+    id: "schueckler",
+    label: "National Fuel Gas v. Schueckler (NY 2020)",
+    type: "case",
+    sectors: ["gas"],
+    blurb: `35 N.Y.3d 297 — New York's high court held that a FERC §7 certificate satisfies the public-use
+      review exemption in the state Eminent Domain Procedure Law, letting the Northern Access pipeline
+      condemn easements even though DEC had denied §401 certification (the denial was then under federal
+      challenge). Shows the limits of the state's pipeline leverage: federal certificates carry
+      condemnation power into NY courts.`,
+    link: "https://law.justia.com/cases/new-york/court-of-appeals/2020/37.html"
+  },
+  {
+    id: "copake",
+    label: "Matter of Town of Copake v. ORES (3d Dep't 2022)",
+    type: "case",
+    sectors: ["electric"],
+    blurb: `206 A.D.3d 167 — towns and local groups challenged the ORES siting regulations under Executive
+      Law §94-c, especially the power to set aside "unreasonably burdensome" local laws. The Appellate
+      Division, Third Department upheld the regulations across the board. The key state-court validation
+      of the accelerated renewable-siting regime now carried forward in PSL Article VIII.`,
+    link: "https://law.justia.com/cases/new-york/appellate-division-third-department/2022/533583.html"
+  },
+  {
+    id: "energy-assn",
+    label: "Energy Ass'n of NY v. PSC (1996)",
+    type: "case",
+    sectors: ["electric", "gas"],
+    blurb: `169 Misc. 2d 924 (Sup. Ct., Albany Co.) — the utilities' trade association challenged the PSC's
+      "Competitive Opportunities" restructuring (unbundling, retail access) as beyond the agency's
+      statutory power. The court sustained the PSC's broad authority under the Public Service Law to
+      restructure the industry without new legislation — the legal foundation of NY's ESCO/retail-choice
+      regime and a marker of how much policy the PSC can make on its own.`,
+    link: "https://law.justia.com/cases/new-york/other-courts/1996/169-misc-2d-924-0.html"
   }
 ];
 
@@ -654,5 +876,44 @@ const LINKS = [
   { source: "centralhudson", target: "complaints", rel: "2021 billing penalties" },
   { source: "psegli", target: "reliability", rel: "Isaias storm review" },
   { source: "escos", target: "ces", rel: "REC obligations as LSEs" },
-  { source: "water-utils", target: "ratecase", rel: "files cases" }
+  { source: "water-utils", target: "ratecase", rel: "files cases" },
+
+  // Federal law
+  { source: "fpa", target: "ferc", rel: "source of authority" },
+  { source: "fpa", target: "psc", rel: "reserves retail/distribution to states" },
+  { source: "nga", target: "ferc", rel: "§7 pipeline certificates" },
+  { source: "purpa", target: "psc", rel: "state implementation (QF terms)" },
+  { source: "purpa", target: "ferc", rel: "avoided-cost framework" },
+  { source: "epact2005", target: "reliability", rel: "FPA §215 mandatory standards" },
+  { source: "epact2005", target: "ferc", rel: "reliability & backstop siting powers" },
+  { source: "cwa401", target: "dec", rel: "certification (veto) power" },
+  { source: "telecom96", target: "telecom", rel: "federal framework" },
+  { source: "telecom96", target: "psc", rel: "preempts most state regulation" },
+  { source: "ferc-orders", target: "ferc", rel: "issued by" },
+  { source: "ferc-orders", target: "nyiso", rel: "Order 2000 created RTO model" },
+  { source: "ferc-orders", target: "vder", rel: "Order 2222 DER aggregation overlap" },
+  { source: "ferc-orders", target: "escos", rel: "Order 888 enabled retail access" },
+
+  // Case law
+  { source: "hope", target: "ratecase", rel: "just & reasonable / end-result test" },
+  { source: "hope", target: "fpa", rel: "construes" },
+  { source: "centralhudson-case", target: "psc", rel: "struck ad ban; commercial-speech test" },
+  { source: "centralhudson-case", target: "centralhudson", rel: "arose from" },
+  { source: "memphis-craft", target: "hefpa", rel: "due-process floor beneath" },
+  { source: "memphis-craft", target: "munis", rel: "binds public systems directly" },
+  { source: "ny-v-ferc", target: "fpa", rel: "fixed retail/wholesale boundary" },
+  { source: "ny-v-ferc", target: "ferc-orders", rel: "upheld Order 888" },
+  { source: "hughes-talen", target: "fpa", rel: "field-preemption line" },
+  { source: "hughes-talen", target: "ces", rel: "constrains state credit design" },
+  { source: "epsa", target: "ferc-orders", rel: "upheld Order 745" },
+  { source: "epsa", target: "fpa", rel: "'directly affecting' doctrine" },
+  { source: "zibelman", target: "ces", rel: "upheld ZEC program" },
+  { source: "zibelman", target: "hughes-talen", rel: "applies 'untethered' test" },
+  { source: "constitution-pipeline", target: "cwa401", rel: "upheld state denial power" },
+  { source: "constitution-pipeline", target: "dec", rel: "sustained DEC denial" },
+  { source: "schueckler", target: "nga", rel: "certificate ⇒ state condemnation" },
+  { source: "copake", target: "ores", rel: "upheld siting regulations" },
+  { source: "copake", target: "aregcba", rel: "construed §94-c" },
+  { source: "energy-assn", target: "psc", rel: "upheld restructuring authority" },
+  { source: "energy-assn", target: "escos", rel: "legal basis of retail choice" }
 ];

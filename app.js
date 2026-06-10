@@ -1,17 +1,32 @@
-// NYS Utility Governance Map — force-directed graph
+// NYS Utility Governance Map — force-directed graph with tiered-layout mode
 
 const TYPE_META = {
-  regulator:   { label: "Regulator",        color: "var(--c-regulator)",   hex: "#4f9cf9" },
-  authority:   { label: "Public authority", color: "var(--c-authority)",   hex: "#38b2ac" },
-  executive:   { label: "Executive",        color: "var(--c-executive)",   hex: "#9f7aea" },
-  legislature: { label: "Legislature",      color: "var(--c-legislature)", hex: "#ed8936" },
-  oversight:   { label: "Oversight",        color: "var(--c-oversight)",   hex: "#ecc94b" },
-  federal:     { label: "Federal / market", color: "var(--c-federal)",     hex: "#a0aec0" },
-  utility:     { label: "Utility",          color: "var(--c-utility)",     hex: "#f56565" },
-  law:         { label: "Law",              color: "var(--c-law)",         hex: "#68d391" },
-  process:     { label: "Process",          color: "var(--c-process)",     hex: "#f687b3" }
+  fedlaw:      { label: "Federal law",      hex: "#0bc5ea", shape: d3.symbolSquare },
+  law:         { label: "State law",        hex: "#68d391", shape: d3.symbolSquare },
+  case:        { label: "Case law",         hex: "#fbd38d", shape: d3.symbolDiamond },
+  federal:     { label: "Federal / market", hex: "#a0aec0", shape: d3.symbolCircle },
+  regulator:   { label: "Regulator",        hex: "#4f9cf9", shape: d3.symbolCircle },
+  authority:   { label: "Public authority", hex: "#38b2ac", shape: d3.symbolCircle },
+  executive:   { label: "Executive",        hex: "#9f7aea", shape: d3.symbolCircle },
+  legislature: { label: "Legislature",      hex: "#ed8936", shape: d3.symbolCircle },
+  oversight:   { label: "Oversight",        hex: "#ecc94b", shape: d3.symbolCircle },
+  utility:     { label: "Utility",          hex: "#f56565", shape: d3.symbolCircle },
+  process:     { label: "Process",          hex: "#f687b3", shape: d3.symbolCircle }
 };
 const SECTORS = ["electric", "gas", "steam", "water", "telecom"];
+
+// Tier rows for the layered layout (top → bottom = federal → companies)
+const TIERS = [
+  { label: "Federal law & institutions", types: ["fedlaw", "federal"] },
+  { label: "Case law",                   types: ["case"] },
+  { label: "State law",                  types: ["law"] },
+  { label: "Elected & oversight",        types: ["legislature", "executive", "oversight"] },
+  { label: "Regulators & authorities",   types: ["regulator", "authority"] },
+  { label: "Regulatory processes",       types: ["process"] },
+  { label: "Utilities & companies",      types: ["utility"] }
+];
+const TIER_OF = {};
+TIERS.forEach((t, i) => t.types.forEach(ty => { TIER_OF[ty] = i; }));
 
 const nodeById = new Map(NODES.map(n => [n.id, n]));
 const degree = {};
@@ -19,20 +34,22 @@ LINKS.forEach(l => {
   degree[l.source] = (degree[l.source] || 0) + 1;
   degree[l.target] = (degree[l.target] || 0) + 1;
 });
-const radius = n => 8 + Math.min(14, (degree[n.id] || 1) * 1.4);
+const radius = n => 8 + Math.min(14, (degree[n.id] || 1) * 1.2);
 
 // ── filters state ──
 const activeTypes = new Set(Object.keys(TYPE_META));
 const activeSectors = new Set(SECTORS);
 let searchTerm = "";
 let selectedId = null;
+let mode = "force";
 
 // ── build filter chips ──
 const typeBox = document.getElementById("type-filters");
 Object.entries(TYPE_META).forEach(([key, meta]) => {
   const chip = document.createElement("span");
   chip.className = "chip active";
-  chip.innerHTML = `<span class="dot" style="background:${meta.hex}"></span>${meta.label}`;
+  const mark = meta.shape === d3.symbolSquare ? "■" : meta.shape === d3.symbolDiamond ? "◆" : "●";
+  chip.innerHTML = `<span class="dot" style="color:${meta.hex}">${mark}</span>${meta.label}`;
   chip.onclick = () => { toggle(activeTypes, key, chip); };
   typeBox.appendChild(chip);
 });
@@ -65,12 +82,30 @@ document.getElementById("reset").onclick = () => {
   applyVisibility();
 };
 
+// layout segmented control
+document.querySelectorAll("#layout-toggle button").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll("#layout-toggle button").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    mode = btn.dataset.mode;
+    applyLayout();
+  };
+});
+
 // ── SVG / simulation ──
 const svg = d3.select("#graph");
-const g = svg.append("g");
 const W = () => svg.node().clientWidth, H = () => svg.node().clientHeight;
 
-const zoom = d3.zoom().scaleExtent([0.3, 4]).on("zoom", e => g.attr("transform", e.transform));
+// arrowhead
+svg.append("defs").append("marker")
+  .attr("id", "arrow").attr("viewBox", "0 -4 8 8")
+  .attr("refX", 7).attr("refY", 0)
+  .attr("markerWidth", 7).attr("markerHeight", 7)
+  .attr("orient", "auto")
+  .append("path").attr("d", "M0,-3.5L8,0L0,3.5").attr("fill", "#55687c");
+
+const g = svg.append("g");
+const zoom = d3.zoom().scaleExtent([0.25, 4]).on("zoom", e => g.attr("transform", e.transform));
 svg.call(zoom).on("dblclick.zoom", null);
 svg.on("click", () => selectNode(null));
 
@@ -78,13 +113,22 @@ const links = LINKS.map(d => ({ ...d }));
 const nodes = NODES.map(d => ({ ...d }));
 
 const sim = d3.forceSimulation(nodes)
-  .force("link", d3.forceLink(links).id(d => d.id).distance(110).strength(0.5))
+  .force("link", d3.forceLink(links).id(d => d.id).distance(115).strength(0.5))
   .force("charge", d3.forceManyBody().strength(-420))
   .force("center", d3.forceCenter(W() / 2, H() / 2))
-  .force("collide", d3.forceCollide().radius(d => radius(d) + 16));
+  .force("collide", d3.forceCollide().radius(d => radius(d) + 17));
+
+// tier band labels (visible only in tiered mode)
+const tierLabelSel = g.append("g").selectAll("text")
+  .data(TIERS).join("text")
+  .attr("class", "tier-label")
+  .attr("x", 14)
+  .text(d => d.label.toUpperCase());
 
 const linkSel = g.append("g").selectAll("line")
-  .data(links).join("line").attr("class", "link-line");
+  .data(links).join("line")
+  .attr("class", "link-line")
+  .attr("marker-end", "url(#arrow)");
 
 const linkLabelSel = g.append("g").selectAll("text")
   .data(links).join("text")
@@ -92,6 +136,7 @@ const linkLabelSel = g.append("g").selectAll("text")
   .attr("text-anchor", "middle")
   .text(d => d.rel);
 
+const symbol = d3.symbol();
 const nodeSel = g.append("g").selectAll("g")
   .data(nodes).join("g")
   .attr("class", "node")
@@ -101,28 +146,56 @@ const nodeSel = g.append("g").selectAll("g")
     .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
   .on("click", (e, d) => { e.stopPropagation(); selectNode(d.id); });
 
-nodeSel.append("circle")
-  .attr("r", d => radius(d))
+nodeSel.append("path")
+  .attr("d", d => symbol.type(TYPE_META[d.type].shape).size(radius(d) * radius(d) * 3.6)())
   .attr("fill", d => TYPE_META[d.type].hex);
 
 nodeSel.append("text")
-  .attr("dy", d => radius(d) + 13)
+  .attr("dy", d => radius(d) + 14)
   .attr("text-anchor", "middle")
-  .text(d => d.label.length > 38 ? d.label.slice(0, 36) + "…" : d.label);
+  .text(d => d.label.length > 40 ? d.label.slice(0, 38) + "…" : d.label);
 
 sim.on("tick", () => {
-  linkSel
-    .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-    .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+  // shorten each link so the arrowhead lands at the target's edge
+  linkSel.each(function (d) {
+    const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const ux = dx / dist, uy = dy / dist;
+    const rS = radius(d.source) + 2, rT = radius(d.target) + 6;
+    d3.select(this)
+      .attr("x1", d.source.x + ux * rS).attr("y1", d.source.y + uy * rS)
+      .attr("x2", d.target.x - ux * rT).attr("y2", d.target.y - uy * rT);
+  });
   linkLabelSel
     .attr("x", d => (d.source.x + d.target.x) / 2)
     .attr("y", d => (d.source.y + d.target.y) / 2 - 4);
   nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
 });
 
-window.addEventListener("resize", () => {
-  sim.force("center", d3.forceCenter(W() / 2, H() / 2)).alpha(0.3).restart();
-});
+// ── layout switching ──
+function tierY(i) {
+  const pad = 80;
+  return pad + i * ((H() - 2 * pad) / (TIERS.length - 1));
+}
+function applyLayout() {
+  if (mode === "tiers") {
+    sim.force("center", null)
+      .force("x", d3.forceX(W() / 2).strength(0.05))
+      .force("y", d3.forceY(d => tierY(TIER_OF[d.type])).strength(0.6))
+      .force("charge", d3.forceManyBody().strength(-240));
+    sim.force("link").strength(0.03);
+    tierLabelSel.attr("y", (d, i) => tierY(i) - 38).classed("visible", true);
+  } else {
+    sim.force("x", null).force("y", null)
+      .force("center", d3.forceCenter(W() / 2, H() / 2))
+      .force("charge", d3.forceManyBody().strength(-420));
+    sim.force("link").strength(0.5);
+    tierLabelSel.classed("visible", false);
+  }
+  sim.alpha(0.9).restart();
+}
+
+window.addEventListener("resize", () => { applyLayout(); });
 
 // ── visibility (filters + search) ──
 function nodeVisible(d) {

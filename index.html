@@ -10,11 +10,16 @@
 <body>
 <header>
   <h1>New York State Utility Governance</h1>
-  <p class="subtitle">Entities, laws, and processes that shape electric, gas, steam, water &amp; telecom utilities — click a node for details, drag to rearrange, scroll to zoom.</p>
+  <p class="subtitle">Entities, laws (state &amp; federal), case law, and processes shaping electric, gas, steam, water &amp; telecom utilities.
+     ● entities&thinsp;/&thinsp;processes &nbsp;■ statutes &nbsp;◆ cases — click a node for details, drag to rearrange, scroll to zoom.</p>
 </header>
 
 <div id="controls">
-  <input id="search" type="search" placeholder="Search nodes… (e.g. PSC, CLCPA, rate)" autocomplete="off">
+  <div id="layout-toggle" role="group" aria-label="Layout">
+    <button data-mode="force" class="on">Web</button>
+    <button data-mode="tiers">Tiers</button>
+  </div>
+  <input id="search" type="search" placeholder="Search nodes… (e.g. PSC, CLCPA, Hughes)" autocomplete="off">
   <div id="type-filters" class="filter-group" aria-label="Filter by type"></div>
   <div id="sector-filters" class="filter-group" aria-label="Filter by sector"></div>
   <button id="reset">Reset view</button>
@@ -35,8 +40,8 @@
 </main>
 
 <footer>
-  <p>An unofficial civic reference. Statutory citations: Public Service Law, Public Authorities Law,
-     Executive Law §94-c, Energy Law Art. 6. Current through the 2024 RAPID Act / 2025 session.</p>
+  <p>An unofficial civic reference. State: Public Service Law, Public Authorities Law, Exec. Law §94-c, Energy Law Art. 6.
+     Federal: FPA, NGA, PURPA, EPAct 2005, CWA §401, Telecom Act 1996. Current through the 2024 RAPID Act / 2025 session.</p>
 </footer>
 
 <script src="data.js"></script>
